@@ -10,6 +10,9 @@ center_pipe_diameter = 33.401;
 // Outside diameter of the pipe you will use for the arms; defaults to 3/4" PVC; 1.050*2.54*10
 arm_pipe_diameter = 26.67; 
 
+// Pick a variant: contunous center pipe, or where it is split into two sections (upper and lower)
+continuous_center_pipe = true;
+
 // Outside diameter of your coax, used to create channels for it to pass through
 coax_diameter = 10.0; 
 
@@ -93,10 +96,11 @@ module bottom_end_piece() {
 }
 
 module center_piece() {
-    end_piece_height = arm_radius*2+end_piece_collar_height*2;
+    end_piece_height = continuous_center_pipe ? arm_radius*2 : arm_radius*2+end_piece_collar_height*2;
+    end_piece_offset = continuous_center_pipe ? [0,0,0] : [0,0,-end_piece_collar_height];
     difference() {
         union () { 
-            translate([0,0,-end_piece_collar_height]) center_column(end_piece_height);
+            translate(end_piece_offset) center_column(end_piece_height);
             
             translate([0, arm_length/2, arm_radius]) rotate([90,0,0]) side_arm_support(arm_length);
             translate([-arm_length/2,0, arm_radius]) rotate([90,0,90]) side_arm_support(arm_length);
@@ -105,8 +109,15 @@ module center_piece() {
          translate([-arm_length/2,0, arm_radius]) rotate([90,0,90]) cylinder(r=coax_channel_radius, h=arm_length);
          cylinder(r=coax_channel_radius*1.5
         , h=end_piece_height);
+        if(continuous_center_pipe) {
+            cylinder(h=end_piece_height, r=center_pipe_diameter/2);
+        }
     }
 }
+/*
+This is a rain cover for the top of the assembly; it should be printed with the large cylinder on the print bed to try to get the best seal possible; 
+paint might be advised as well to try to close any pores or seams
+*/
 module top_cap() {
     union() {
         cylinder(r=center_pipe_diameter/2+printed_wall_thickness+1, h=4);
@@ -116,9 +127,6 @@ module top_cap() {
         }
     }
 }
-
-// MODULES FOR REFERENCE
-
 
 /*
 The entire assembly
